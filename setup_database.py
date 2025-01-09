@@ -7,14 +7,11 @@ def setup_database():
     try:
         print("Setting up DuckDB database...")
         
-        # Connect to DuckDB (creates file if it doesn't exist)
         con = duckdb.connect('trades.duckdb')
         
-        # Load transaction data
         print("Loading transaction data...")
         df = pd.read_csv("data/all_transactions.csv")
         
-        # Create trades table
         print("Creating trades table...")
         con.execute("""
             CREATE TABLE IF NOT EXISTS trades (
@@ -33,7 +30,6 @@ def setup_database():
             )
         """)
         
-        # Import data into trades table
         print("Importing data into trades table...")
         con.execute("DELETE FROM trades")  # Clear existing data
         con.register('df', df)  # Register DataFrame

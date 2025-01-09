@@ -1,6 +1,8 @@
 import pandas as pd
 import json
 from datetime import datetime
+import re
+import numpy as np
 
 def validate_transactions():
     """Validate the transaction data for missing or malformed entries"""
@@ -8,6 +10,9 @@ def validate_transactions():
         # Load the data
         print("Loading transaction data...")
         df = pd.read_csv("data/all_transactions.csv")
+        
+        # Print column names to debug
+        print("\nAvailable columns:", df.columns.tolist())
         
         # Define critical fields and their validation rules
         validation_rules = {
@@ -21,7 +26,7 @@ def validate_transactions():
                 'is_date': True,
                 'format': '%Y-%m-%d'
             },
-            'transaction_type': {
+            'type': {
                 'check_empty': True,
                 'valid_values': ['purchase', 'sale', 'exchange']
             },
@@ -37,47 +42,53 @@ def validate_transactions():
         validation_results = {
             'missing_values': {},
             'malformed_values': {},
-            'total_records': len(df)
+            'total_records': int(len(df))  # Convert to standard Python int
         }
 
         # Perform validation for each field
         for field, rules in validation_rules.items():
             print(f"\nValidating {field}...")
             
+            # Check if field exists in dataframe
+            if field not in df.columns:
+                print(f"Warning: Field '{field}' not found in data")
+                validation_results['missing_values'][field] = int(len(df))
+                validation_results['malformed_values'][field] = 0
+                continue
+            
             # Check for missing values
             if rules.get('check_empty'):
-                missing_count = df[field].isna().sum()
+                missing_count = int(df[field].isna().sum())  # Convert to standard Python int
                 validation_results['missing_values'][field] = missing_count
                 print(f"Missing values: {missing_count}")
 
             # Skip malformed checks for missing values
             valid_rows = df[df[field].notna()]
+            malformed_count = 0
 
-            # Check for malformed values
-            malformed = []
-            
-            if field == 'transaction_date' and rules.get('is_date'):
-                for idx, value in valid_rows[field].items():
-                    try:
-                        datetime.strptime(str(value), rules['format'])
-                    except ValueError:
-                        malformed.append(idx)
+            try:
+                if field == 'transaction_date' and rules.get('is_date'):
+                    malformed_count = sum(1 for value in valid_rows[field] if not is_valid_date(value, rules['format']))
 
-            elif field == 'transaction_type' and 'valid_values' in rules:
-                malformed = valid_rows[~valid_rows[field].str.lower().isin(rules['valid_values'])].index
+                elif field == 'type' and 'valid_values' in rules:
+                    malformed_count = int(sum(~valid_rows[field].str.lower().isin(rules['valid_values'])))
 
-            elif 'pattern' in rules:
-                import re
-                pattern = re.compile(rules['pattern'])
-                malformed = valid_rows[~valid_rows[field].astype(str).str.match(pattern)].index
+                elif 'pattern' in rules:
+                    pattern = re.compile(rules['pattern'])
+                    malformed_count = sum(1 for value in valid_rows[field].astype(str) 
+                                        if not bool(pattern.match(str(value))))
 
-            validation_results['malformed_values'][field] = len(malformed)
-            
-            if malformed:
-                print(f"Malformed values: {len(malformed)}")
-                print("Sample of malformed entries:")
-                for idx in malformed[:5]:  # Show first 5 malformed entries
-                    print(f"  Row {idx}: {df.loc[idx, field]}")
+                validation_results['malformed_values'][field] = int(malformed_count)  # Convert to standard Python int
+                
+                if malformed_count > 0:
+                    print(f"Malformed values: {malformed_count}")
+                    
+            except Exception as e:
+                print(f"Error validating {field}: {str(e)}")
+                validation_results['malformed_values'][field] = 0
+
+        # Convert any remaining numpy types to Python types
+        validation_results = convert_to_serializable(validation_results)
 
         # Save validation results
         print("\nSaving validation results...")
@@ -102,6 +113,29 @@ def validate_transactions():
     except Exception as e:
         print(f"Error during validation: {e}")
         return None
+
+def is_valid_date(date_str, date_format):
+    """Helper function to validate date strings"""
+    try:
+        datetime.strptime(str(date_str), date_format)
+        return True
+    except ValueError:
+        return False
+
+def convert_to_serializable(obj):
+    """Convert numpy types to standard Python types"""
+    if isinstance(obj, dict):
+        return {key: convert_to_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [convert_to_serializable(item) for item in obj]
+    elif isinstance(obj, (np.integer, np.int64, np.int32, np.int16, np.int8,
+                         np.uint64, np.uint32, np.uint16, np.uint8)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, np.float64, np.float32, np.float16)):
+        return float(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    return obj
 
 if __name__ == "__main__":
     validate_transactions() 

@@ -24,7 +24,7 @@ def fetch_transaction_data():
         with open("data/all_transactions.json", "w") as f:
             json.dump(data, f, indent=4)
             
-        # Convert to DataFrame for validation
+       
         df = pd.DataFrame(data)
         
         # Validate critical fields
@@ -41,7 +41,7 @@ def fetch_transaction_data():
                 if missing_count > 0:
                     print(f"Warning: {missing_count} missing values in {field}")
         
-        # Save as CSV for easier viewing
+
         print("Saving data as CSV...")
         df.to_csv("data/all_transactions.csv", index=False)
         
