@@ -1,5 +1,19 @@
-pandas
-requests
-duckdb
-yfinance
-numpy 
+# Database
+duckdb==0.9.2
+pandas==2.1.4
+numpy==1.26.2
+
+# Dashboard
+streamlit==1.29.0
+plotly==5.18.0
+
+# Data Processing
+yfinance==0.2.33
+requests==2.31.0
+tabulate==0.9.0
+
+# Date handling
+python-dateutil==2.8.2
+
+# Optional but recommended for performance
+pyarrow==14.0.1

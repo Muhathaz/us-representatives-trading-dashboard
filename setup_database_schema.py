@@ -222,5 +222,38 @@ def import_initial_data():
             con_rep.close()
         return False
 
+def get_portfolio_value_analysis(self, representative_name=None):
+    """Fetch portfolio value analysis data"""
+    try:
+        self._check_connection()
+        if representative_name:
+            result = self.con.execute("""
+                SELECT * FROM portfolio_value_analysis 
+                WHERE representative = ?
+                ORDER BY transaction_date
+            """, [representative_name]).fetchdf()
+        else:
+            result = self.con.execute("SELECT * FROM portfolio_value_analysis").fetchdf()
+        return result
+    except Exception as e:
+        print(f"Error fetching portfolio value analysis: {e}")
+        return pd.DataFrame()
+
+def get_trade_profitability(self, representative_name=None):
+    """Fetch trade profitability analysis data"""
+    try:
+        self._check_connection()
+        if representative_name:
+            result = self.con.execute("""
+                SELECT * FROM trade_profitability_analysis 
+                WHERE representative = ?
+            """, [representative_name]).fetchdf()
+        else:
+            result = self.con.execute("SELECT * FROM trade_profitability_analysis").fetchdf()
+        return result
+    except Exception as e:
+        print(f"Error fetching trade profitability: {e}")
+        return pd.DataFrame()
+
 if __name__ == "__main__":
     setup_database_schema() 

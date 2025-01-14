@@ -22,6 +22,7 @@ build/
 
 # Project specific files and directories
 document.md
+dashboardplan.md
 data/
 *.duckdb
 *.duckdb.wal
