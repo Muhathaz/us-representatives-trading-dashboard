@@ -147,6 +147,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-Your Name - your.email@example.com
+Muhathaz - mails2muhathaz@gmail.com
 
 Project Link: [https://github.com/yourusername/us-representatives-trading-dashboard](https://github.com/yourusername/us-representatives-trading-dashboard)
