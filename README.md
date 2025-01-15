@@ -149,4 +149,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Muhathaz - mails2muhathaz@gmail.com
 
-Project Link: [https://github.com/yourusername/us-representatives-trading-dashboard]
+Project Link: (https://github.com/Muhathaz/us-representatives-trading-dashboard)
