@@ -26,6 +26,13 @@ page = st.sidebar.selectbox(
     ["Representative Analysis", "Stock Analysis"]
 )
 
+# Define color mapping for parties
+party_colors = {
+    'Republican': '#FF0000',  # Red
+    'Democrat': '#0000FF',     # Blue
+    'Independent': '#808080',  # Gray for Independents or others
+}
+
 if page == "Representative Analysis":
     st.title("Representative Analysis")
     
@@ -64,18 +71,7 @@ if page == "Representative Analysis":
                 'transaction_date': 'Date',
                 'stock_value': 'Value ($)',
                 'ticker': 'Stock'
-            },
-            template="plotly_dark"  # Optional: Use a dark template for better visibility
-        )
-        
-        # Add total portfolio value line
-        total_value = filtered_portfolio_data.groupby('transaction_date')['total_portfolio_value'].first().reset_index()
-        fig.add_scatter(
-            x=total_value['transaction_date'],
-            y=total_value['total_portfolio_value'],
-            name='Total Portfolio Value',
-            line=dict(color='black', width=2, dash='dash'),
-            mode='lines'
+            }
         )
         
         fig.update_layout(
@@ -117,13 +113,14 @@ if page == "Representative Analysis":
         # Current Positions
         st.subheader("Current Positions")
         positions_data = data.get_current_positions(selected_rep)
+        
         if not positions_data.empty:
             fig_positions = px.bar(
                 positions_data,
                 y='ticker',
                 x='current_value',
                 orientation='h',
-                color='sector',
+                color='sector',  # Use sector for color
                 title="Open Positions by Value",
                 height=600,
                 labels={
@@ -138,6 +135,8 @@ if page == "Representative Analysis":
                 margin=dict(l=20, r=20, t=40, b=20),
             )
             st.plotly_chart(fig_positions, use_container_width=True)
+        else:
+            st.info("No current positions found for this representative.")
 
     # Create two columns for the bottom row
     col3, col4 = st.columns(2)
@@ -151,7 +150,7 @@ if page == "Representative Analysis":
                 sector_data,
                 values='transaction_count',
                 names='sector',
-                title="Trading Volume by Industry",
+                title="Trading Volume by Sector",
                 height=300
             )
             fig_sector.update_traces(textposition='inside', textinfo='percent+label')
@@ -356,7 +355,8 @@ elif page == "Stock Analysis":
                         y='representative',
                         x='position_value',
                         orientation='h',
-                        color='party',
+                        color='party',  # Use party for color
+                        color_discrete_map=party_colors,  # Apply color mapping
                         title="Representatives with Active Positions",
                         height=300,
                         labels={
@@ -382,12 +382,20 @@ elif page == "Stock Analysis":
                 st.subheader("Party Distribution")
                 if not positions_data.empty:
                     party_data = positions_data.groupby('party')['position_value'].sum().reset_index()
+                    
+                    # Update the color mapping for the pie chart
+                    party_colors = {
+                        'Republican': '#FF0000',  # Red
+                        'Democrat': '#0000FF',     # Blue
+                    }
+                    
                     fig_party = px.pie(
                         party_data,
                         values='position_value',
                         names='party',
                         title="Holdings by Party",
-                        height=300
+                        height=300,
+                        color_discrete_map=party_colors  # Apply updated color mapping
                     )
                     fig_party.update_traces(textposition='inside', textinfo='percent+label')
                     fig_party.update_layout(margin=dict(l=20, r=20, t=40, b=20))
